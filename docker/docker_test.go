@@ -1,4 +1,4 @@
-package docker
+package docker_test
 
 import (
 	"context"
@@ -7,6 +7,9 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/docker/docker/api/types"
+	"github.com/ninnemana/shuttle/docker"
 )
 
 const (
@@ -61,7 +64,7 @@ func TestBuildImage(t *testing.T) {
 
 	type args struct {
 		ctx context.Context
-		bc  BuildConfig
+		bc  docker.BuildConfig
 	}
 	tests := []struct {
 		name    string
@@ -73,7 +76,7 @@ func TestBuildImage(t *testing.T) {
 			"Success",
 			args{
 				context.Background(),
-				BuildConfig{
+				docker.BuildConfig{
 					Directory: &dir,
 					Tags:      []string{"shutle-test:latest"},
 				},
@@ -85,7 +88,7 @@ func TestBuildImage(t *testing.T) {
 			"Bad Docker Client",
 			args{
 				context.Background(),
-				BuildConfig{
+				docker.BuildConfig{
 					Directory: &dir,
 					Tags:      []string{"shutle-test:latest"},
 				},
@@ -99,7 +102,7 @@ func TestBuildImage(t *testing.T) {
 			"NilDirectory",
 			args{
 				context.Background(),
-				BuildConfig{},
+				docker.BuildConfig{},
 			},
 			nil,
 			true,
@@ -110,44 +113,44 @@ func TestBuildImage(t *testing.T) {
 		mapToEnv(env)
 		mapToEnv(tt.envs)
 		t.Run(tt.name, func(t *testing.T) {
-			if err := BuildImage(tt.args.ctx, tt.args.bc); (err != nil) != tt.wantErr {
+			if err := docker.BuildImage(tt.args.ctx, tt.args.bc); (err != nil) != tt.wantErr {
 				t.Errorf("BuildImage() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func TestListImages(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		all bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		filters map[string]string
-		wantErr bool
-	}{
-		{
-			"success",
-			args{
-				context.Background(),
-				true,
-			},
-			nil,
-			false,
-		},
-	}
-	for _, tt := range tests {
-		os.Setenv("DOCKER_CERT_PATH", "")
-		t.Run(tt.name, func(t *testing.T) {
-			if _, err := ListImages(tt.args.ctx, tt.args.all); (err != nil) != tt.wantErr {
-				t.Errorf("ListImages() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-		})
-	}
-}
+// func TestListImages(t *testing.T) {
+// 	type args struct {
+// 		ctx context.Context
+// 		all bool
+// 	}
+// 	tests := []struct {
+// 		name    string
+// 		args    args
+// 		filters map[string]string
+// 		wantErr bool
+// 	}{
+// 		{
+// 			"success",
+// 			args{
+// 				context.Background(),
+// 				true,
+// 			},
+// 			nil,
+// 			false,
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		os.Setenv("DOCKER_CERT_PATH", "")
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			if _, err := docker.ListImages(tt.args.ctx, tt.args.all); (err != nil) != tt.wantErr {
+// 				t.Errorf("ListImages() error = %v, wantErr %v", err, tt.wantErr)
+// 				return
+// 			}
+// 		})
+// 	}
+// }
 
 func envToMap() map[string]string {
 	env := make(map[string]string)
@@ -162,5 +165,45 @@ func envToMap() map[string]string {
 func mapToEnv(env map[string]string) {
 	for k, v := range env {
 		os.Setenv(k, v)
+	}
+}
+
+func TestListImages(t *testing.T) {
+	type args struct {
+		ctx  context.Context
+		opts *docker.FilterOptions
+	}
+	all := true
+	name := "shutle-test"
+	latest := "latest"
+	tests := []struct {
+		name    string
+		args    args
+		want    []types.ImageSummary
+		wantErr bool
+	}{
+		{
+			"Success",
+			args{
+				context.Background(),
+				&docker.FilterOptions{
+					All:  &all,
+					Name: &name,
+					Tag:  &latest,
+				},
+			},
+			nil,
+			false,
+		},
+	}
+	for _, tt := range tests {
+		os.Setenv("DOCKER_CERT_PATH", "")
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := docker.ListImages(tt.args.ctx, tt.args.opts)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ListImages() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }

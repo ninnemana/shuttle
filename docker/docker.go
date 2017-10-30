@@ -47,13 +47,16 @@ func BuildImage(ctx context.Context, bc BuildConfig) error {
 }
 
 // ListImages returns all the available docker images.
-func ListImages(ctx context.Context, all bool) ([]types.ImageSummary, error) {
+func ListImages(ctx context.Context, opts *FilterOptions) ([]types.ImageSummary, error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return cli.ImageList(ctx, types.ImageListOptions{
-		All: all,
-	})
+	filter, err := opts.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	return cli.ImageList(ctx, filter)
 }

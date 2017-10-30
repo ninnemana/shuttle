@@ -1,10 +1,11 @@
-package docker
+package docker_test
 
 import (
 	"reflect"
 	"testing"
 
 	"github.com/docker/docker/api/types"
+	"github.com/ninnemana/shuttle/docker"
 )
 
 func TestBuildConfig_Validate(t *testing.T) {
@@ -37,7 +38,7 @@ func TestBuildConfig_Validate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			bc := BuildConfig{
+			bc := docker.BuildConfig{
 				Directory:  tt.fields.Directory,
 				Dockerfile: tt.fields.Dockerfile,
 				Remove:     tt.fields.Remove,
@@ -74,7 +75,7 @@ func TestBuildConfig_ToOptions(t *testing.T) {
 				Remove:         false,
 				ForceRemove:    false,
 				PullParent:     true,
-				Dockerfile:     DefaultDockerfile,
+				Dockerfile:     docker.DefaultDockerfile,
 			},
 		},
 		{
@@ -88,7 +89,7 @@ func TestBuildConfig_ToOptions(t *testing.T) {
 				Remove:         false,
 				ForceRemove:    false,
 				PullParent:     true,
-				Dockerfile:     DefaultDockerfile,
+				Dockerfile:     docker.DefaultDockerfile,
 			},
 		},
 		{
@@ -116,13 +117,13 @@ func TestBuildConfig_ToOptions(t *testing.T) {
 				Remove:         remove,
 				ForceRemove:    remove,
 				PullParent:     true,
-				Dockerfile:     DefaultDockerfile,
+				Dockerfile:     docker.DefaultDockerfile,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			bc := BuildConfig{
+			bc := docker.BuildConfig{
 				Directory:  tt.fields.Directory,
 				Dockerfile: tt.fields.Dockerfile,
 				Remove:     tt.fields.Remove,
